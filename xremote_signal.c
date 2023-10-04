@@ -123,3 +123,9 @@ void xremote_signal_receiver_resume(XRemoteSignalReceiver *rx_ctx)
     infrared_worker_rx_set_received_signal_callback(rx_ctx->worker,
             xremote_signal_receiver_rx_callback, (void*)rx_ctx);
 }
+
+InfraredSignal* xremote_signal_receiver_get_signal(XRemoteSignalReceiver *rx_ctx)
+{
+    xremote_app_assert(rx_ctx, NULL);
+    return rx_ctx->signal;
+}

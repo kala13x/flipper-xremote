@@ -48,6 +48,13 @@
 #define XREMOTE_COMMAND_PREV_CHAN       "Ch_prev"
 
 typedef enum {
+    XRemoteEventReserved = 200,
+    XRemoteEventSignalReceived,
+    XRemoteEventSignalSaved,
+    XRemoteEventSignalRetry
+} XRemoteEvent;
+
+typedef enum {
     /* Navigation */
     XRemoteIconOk,
     XRemoteIconEnter,

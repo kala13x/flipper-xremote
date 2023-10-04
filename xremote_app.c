@@ -115,6 +115,7 @@ XRemoteAppContext* xremote_app_context_alloc(void *arg)
     ctx->view_dispatcher = view_dispatcher_alloc();
     view_dispatcher_enable_queue(ctx->view_dispatcher);
     view_dispatcher_attach_to_gui(ctx->view_dispatcher, ctx->gui, ViewDispatcherTypeFullscreen);
+
     return ctx;
 }
 

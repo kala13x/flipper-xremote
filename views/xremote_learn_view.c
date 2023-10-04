@@ -26,25 +26,6 @@ static void xremote_learn_view_draw_callback(Canvas* canvas, void* context)
     xremote_canvas_draw_exit_footer(canvas, orientation, "Press to exit");
 }
 
-XRemoteView* xremote_learn_view_alloc(void* app_ctx)
-{
-    XRemoteView *view = xremote_view_alloc(app_ctx,
-        NULL, xremote_learn_view_draw_callback);
-
-    with_view_model(
-        xremote_view_get_view(view),
-        XRemoteViewModel* model,
-        { model->context = app_ctx; },
-        true
-    );
-
-    return view;
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////
-// Learn alpha implementation
-//////////////////////////////////////////////////////////////////////////////////////////
-
 static void xremote_learn_success_view_draw_callback(Canvas* canvas, void* context)
 {
     furi_assert(context);
@@ -53,23 +34,50 @@ static void xremote_learn_success_view_draw_callback(Canvas* canvas, void* conte
     XRemoteAppContext* app_ctx = learn_ctx->app_ctx;
 
     xremote_canvas_draw_header(canvas, app_ctx->app_settings->orientation, NULL);
-    InfraredMessage* message = infrared_signal_get_message(learn_ctx->rx_signal); 
-    const char *protocol = infrared_get_protocol_name(message->protocol);
+    const char *button_name = "TODO"; // temporary
+    char signal_info[128];
 
-    char signal[128];
-    snprintf(signal, sizeof(signal), "Proto: %s\nAddr: 0x%lX\nCmd: 0x%lX\nRep: %s\r\n",
-        protocol, message->address, message->command, message->repeat ? "Yes" : "No");
+    if (infrared_signal_is_raw(learn_ctx->rx_signal))
+    {
+        InfraredRawSignal* raw = infrared_signal_get_raw_signal(learn_ctx->rx_signal);
+
+        snprintf(signal_info, sizeof(signal_info),
+            "Name: %s\n"
+            "Type: RAW\n"
+            "T-Size: %u\n"
+            "D-Cycle: %.2f\n",
+            button_name,
+            raw->timings_size,
+            (double)raw->duty_cycle);
+    }
+    else
+    {
+        InfraredMessage* message = infrared_signal_get_message(learn_ctx->rx_signal);
+        const char *infrared_protocol = infrared_get_protocol_name(message->protocol);
+
+        snprintf(signal_info, sizeof(signal_info),
+            "Name: %s\n"
+            "Proto: %s\n"
+            "Addr: 0x%lX\n"
+            "Cmd: 0x%lX\n",
+            button_name,
+            infrared_protocol,
+            message->address,
+            message->command);
+    }
 
     if (app_ctx->app_settings->orientation == ViewOrientationHorizontal)
     {
-        elements_multiline_text_aligned(canvas, 0, 10, AlignLeft, AlignTop, signal);
+        canvas_draw_str_aligned(canvas, 0, 0, AlignLeft, AlignTop, "Received signal");
+        elements_multiline_text_aligned(canvas, 0, 16, AlignLeft, AlignTop, signal_info);
         xremote_canvas_draw_button_wide(canvas, model->ok_pressed, 68, 12, "Finish", XRemoteIconEnter);
         xremote_canvas_draw_button_wide(canvas, model->right_pressed, 68, 30, "Next", XRemoteIconArrowRight);
         xremote_canvas_draw_button_wide(canvas, model->back_pressed, 68, 48, "Retry", XRemoteIconBack);
     }
     else
     {
-        elements_multiline_text_aligned(canvas, 0, 25, AlignLeft, AlignTop, signal);
+        canvas_draw_str_aligned(canvas, 0, 12, AlignLeft, AlignTop, "Received signal");
+        elements_multiline_text_aligned(canvas, 0, 28, AlignLeft, AlignTop, signal_info);
         xremote_canvas_draw_button_wide(canvas, model->ok_pressed, 0, 76, "Finish", XRemoteIconEnter);
         xremote_canvas_draw_button_wide(canvas, model->right_pressed, 0, 94, "Next", XRemoteIconArrowRight);
         xremote_canvas_draw_button_wide(canvas, model->back_pressed, 0, 112, "Retry", XRemoteIconBack);
@@ -111,13 +119,10 @@ static bool xremote_learn_success_view_input_callback(InputEvent* event, void* c
 
     if (event->key == InputKeyBack)
     {
-        XRemoteLearnContext* learn_ctx = xremote_view_get_context(view);
-        xremote_signal_receiver_resume(learn_ctx->rx_ctx);
+        XRemoteAppContext* app_ctx = xremote_view_get_app_context(view);
+        view_dispatcher_send_custom_event(app_ctx->view_dispatcher, XRemoteEventSignalRetry);
 
-        ViewDispatcher* view_disp = learn_ctx->app_ctx->view_dispatcher;
-        view_dispatcher_switch_to_view(view_disp, XRemoteViewLearn);
-
-        return false;
+        return true;
     }
 
     xremote_learn_success_view_process(view, event);
@@ -146,6 +151,17 @@ XRemoteView* xremote_learn_success_view_alloc(void* app_ctx, void *learn_ctx)
     return view;
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////
-// END OF: Learn alpha implementation
-//////////////////////////////////////////////////////////////////////////////////////////
+XRemoteView* xremote_learn_view_alloc(void* app_ctx)
+{
+    XRemoteView *view = xremote_view_alloc(app_ctx,
+        NULL, xremote_learn_view_draw_callback);
+
+    with_view_model(
+        xremote_view_get_view(view),
+        XRemoteViewModel* model,
+        { model->context = app_ctx; },
+        true
+    );
+
+    return view;
+}

@@ -12,11 +12,12 @@
 #include "xremote_signal.h"
 
 typedef struct {
+    XRemoteSignalReceiver* ir_receiver;
     XRemoteClearCallback on_clear;
-    XRemoteSignalReceiver* rx_ctx;
     XRemoteAppContext* app_ctx;
     InfraredSignal *rx_signal;
     XRemoteView* signal_view;
+    bool processing_signal;
     void* context;
 } XRemoteLearnContext;
 
