@@ -24,11 +24,10 @@ void xremote_learn_signal_callback(void *context, InfraredSignal* signal)
     XRemoteLearnContext* learn_ctx = context;
     XRemoteAppContext* app_ctx = learn_ctx->app_ctx;
     ViewDispatcher* view_disp = app_ctx->view_dispatcher;
+    learn_ctx->rx_signal = signal;
 
     xremote_signal_receiver_pause(learn_ctx->rx_ctx);
     view_dispatcher_switch_to_view(view_disp, XRemoteViewSignal);
-
-    UNUSED(signal);
 }
 
 XRemoteLearnContext* xremote_learn_context_alloc(XRemoteAppContext* app_ctx)
@@ -37,6 +36,7 @@ XRemoteLearnContext* xremote_learn_context_alloc(XRemoteAppContext* app_ctx)
     learn_ctx->signal_view = xremote_signal_view_alloc(app_ctx, learn_ctx);
     learn_ctx->rx_ctx = xremote_signal_receiver_alloc(app_ctx);
     learn_ctx->app_ctx = app_ctx;
+    learn_ctx->rx_signal = NULL;
 
     View* view = xremote_view_get_view(learn_ctx->signal_view);
     view_set_previous_callback(view, xremote_signal_view_exit_callback);

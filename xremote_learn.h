@@ -15,6 +15,7 @@ typedef struct {
     XRemoteClearCallback on_clear;
     XRemoteSignalReceiver* rx_ctx;
     XRemoteAppContext* app_ctx;
+    InfraredSignal *rx_signal;
     XRemoteView* signal_view;
     void* context;
 } XRemoteLearnContext;
