@@ -11,4 +11,4 @@
 #include "xremote_common_view.h"
 
 XRemoteView* xremote_learn_view_alloc(void* app_ctx);
-XRemoteView* xremote_signal_view_alloc(void* app_ctx, void *rx_ctx);
+XRemoteView* xremote_learn_success_view_alloc(void* app_ctx, void *rx_ctx);

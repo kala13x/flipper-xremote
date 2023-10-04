@@ -9,17 +9,19 @@
 #include "xremote_learn.h"
 #include "views/xremote_learn_view.h"
 
-/////////////////////////////////////////////////////////////////////////////////////
-// Learn alpha implementation
-/////////////////////////////////////////////////////////////////////////////////////
+static uint32_t xremote_learn_view_exit_callback(void* context)
+{
+    UNUSED(context);
+    return XRemoteViewSubmenu;
+}
 
-uint32_t xremote_signal_view_exit_callback(void* context)
+static uint32_t xremote_learn_success_view_exit_callback(void* context)
 {
     UNUSED(context);
     return XRemoteViewLearn;
 }
 
-void xremote_learn_signal_callback(void *context, InfraredSignal* signal)
+static void xremote_learn_signal_callback(void *context, InfraredSignal* signal)
 {
     XRemoteLearnContext* learn_ctx = context;
     XRemoteAppContext* app_ctx = learn_ctx->app_ctx;
@@ -30,16 +32,16 @@ void xremote_learn_signal_callback(void *context, InfraredSignal* signal)
     view_dispatcher_switch_to_view(view_disp, XRemoteViewSignal);
 }
 
-XRemoteLearnContext* xremote_learn_context_alloc(XRemoteAppContext* app_ctx)
+static XRemoteLearnContext* xremote_learn_context_alloc(XRemoteAppContext* app_ctx)
 {
     XRemoteLearnContext *learn_ctx = malloc(sizeof(XRemoteLearnContext));
-    learn_ctx->signal_view = xremote_signal_view_alloc(app_ctx, learn_ctx);
+    learn_ctx->signal_view = xremote_learn_success_view_alloc(app_ctx, learn_ctx);
     learn_ctx->rx_ctx = xremote_signal_receiver_alloc(app_ctx);
     learn_ctx->app_ctx = app_ctx;
     learn_ctx->rx_signal = NULL;
 
     View* view = xremote_view_get_view(learn_ctx->signal_view);
-    view_set_previous_callback(view, xremote_signal_view_exit_callback);
+    view_set_previous_callback(view, xremote_learn_success_view_exit_callback);
     view_dispatcher_add_view(app_ctx->view_dispatcher, XRemoteViewSignal, view);
 
     xremote_signal_receiver_set_context(learn_ctx->rx_ctx, learn_ctx, NULL);
@@ -48,7 +50,7 @@ XRemoteLearnContext* xremote_learn_context_alloc(XRemoteAppContext* app_ctx)
     return learn_ctx;
 }
 
-void xremote_learn_context_free(XRemoteLearnContext* learn_ctx)
+static void xremote_learn_context_free(XRemoteLearnContext* learn_ctx)
 {
     xremote_app_assert_void(learn_ctx);
     ViewDispatcher* view_disp = learn_ctx->app_ctx->view_dispatcher;
@@ -59,26 +61,10 @@ void xremote_learn_context_free(XRemoteLearnContext* learn_ctx)
     free(learn_ctx);
 }
 
-void xremote_learn_context_set_view_context(XRemoteLearnContext* learn_ctx, void *context, XRemoteClearCallback on_clear)
-{
-    xremote_app_assert_void((learn_ctx && learn_ctx->signal_view));
-    xremote_view_set_context(learn_ctx->signal_view, context, on_clear);
-}
-
-void xremote_learn_context_clear_callback(void* context)
+static void xremote_learn_context_clear_callback(void* context)
 {
     XRemoteLearnContext *learn = context;
     xremote_learn_context_free(learn);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////
-// END OF: Learn alpha implementation
-/////////////////////////////////////////////////////////////////////////////////////
-
-static uint32_t xremote_learn_view_exit_callback(void* context)
-{
-    UNUSED(context);
-    return XRemoteViewSubmenu;
 }
 
 XRemoteApp* xremote_learn_alloc(XRemoteAppContext* app_ctx)

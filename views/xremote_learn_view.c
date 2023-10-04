@@ -45,130 +45,90 @@ XRemoteView* xremote_learn_view_alloc(void* app_ctx)
 // Learn alpha implementation
 //////////////////////////////////////////////////////////////////////////////////////////
 
-static void xremote_signal_view_draw_callback(Canvas* canvas, void* context)
+static void xremote_learn_success_view_draw_callback(Canvas* canvas, void* context)
 {
     furi_assert(context);
     XRemoteViewModel* model = context;
     XRemoteLearnContext* learn_ctx = model->context;
     XRemoteAppContext* app_ctx = learn_ctx->app_ctx;
-    ViewOrientation orientation = app_ctx->app_settings->orientation;
 
-    xremote_canvas_draw_header(canvas, orientation, "IR Signal");
-    canvas_set_font(canvas, FontSecondary);
-
-    InfraredMessage* message = infrared_signal_get_message(learn_ctx->rx_signal);
-    const char *infrared_protocol = infrared_get_protocol_name(message->protocol);
-    uint8_t y = orientation == ViewOrientationVertical ? 30 : 10;
+    xremote_canvas_draw_header(canvas, app_ctx->app_settings->orientation, NULL);
+    InfraredMessage* message = infrared_signal_get_message(learn_ctx->rx_signal); 
+    const char *protocol = infrared_get_protocol_name(message->protocol);
 
     char signal[128];
-    snprintf(signal,
-        sizeof(signal),
-        "Proto: %s\n"
-        "Addr: 0x%lX\n"
-        "Cmd: 0x%lX\n"
-        "Rep: %s\r\n",
-        infrared_protocol,
-        message->address,
-        message->command,
-        message->repeat ?
-            "Yes" : "No");
+    snprintf(signal, sizeof(signal), "Proto: %s\nAddr: 0x%lX\nCmd: 0x%lX\nRep: %s\r\n",
+        protocol, message->address, message->command, message->repeat ? "Yes" : "No");
 
-    elements_multiline_text_aligned(canvas, 0, y, AlignLeft, AlignTop, signal);
-
-    if (orientation == ViewOrientationHorizontal)
-        xremote_canvas_draw_button_wide(canvas, model->left_pressed, 68, 35, "Retry", XRemoteIconArrowLeft);
+    if (app_ctx->app_settings->orientation == ViewOrientationHorizontal)
+    {
+        elements_multiline_text_aligned(canvas, 0, 10, AlignLeft, AlignTop, signal);
+        xremote_canvas_draw_button_wide(canvas, model->ok_pressed, 68, 12, "Finish", XRemoteIconEnter);
+        xremote_canvas_draw_button_wide(canvas, model->right_pressed, 68, 30, "Next", XRemoteIconArrowRight);
+        xremote_canvas_draw_button_wide(canvas, model->back_pressed, 68, 48, "Retry", XRemoteIconBack);
+    }
     else
-        xremote_canvas_draw_button_wide(canvas, model->left_pressed, 0, 100, "Retry", XRemoteIconArrowLeft);
-
-    xremote_canvas_draw_exit_footer(canvas, orientation, "Press to exit");
+    {
+        elements_multiline_text_aligned(canvas, 0, 25, AlignLeft, AlignTop, signal);
+        xremote_canvas_draw_button_wide(canvas, model->ok_pressed, 0, 76, "Finish", XRemoteIconEnter);
+        xremote_canvas_draw_button_wide(canvas, model->right_pressed, 0, 94, "Next", XRemoteIconArrowRight);
+        xremote_canvas_draw_button_wide(canvas, model->back_pressed, 0, 112, "Retry", XRemoteIconBack);
+    }
 }
 
-static void xremote_signal_view_process(XRemoteView* view, InputEvent* event)
+static void xremote_learn_success_view_process(XRemoteView* view, InputEvent* event)
 {
     with_view_model(
         xremote_view_get_view(view),
         XRemoteViewModel* model,
         {
-            XRemoteLearnContext* learn_ctx = xremote_view_get_context(view);
-            XRemoteAppExit exit = learn_ctx->app_ctx->app_settings->exit_behavior;
-            model->context = learn_ctx;
+            model->context = xremote_view_get_context(view);
 
             if (event->type == InputTypePress)
             {
-                if (event->key == InputKeyUp)
+                if (event->key == InputKeyOk)
                 {
-                    model->up_pressed = true;
-                }
-                else if (event->key == InputKeyDown)
-                {
-                    model->down_pressed = true;
-                }
-                else if (event->key == InputKeyLeft)
-                {
-                    model->left_pressed = true;
-                    xremote_signal_receiver_resume(learn_ctx->rx_ctx);
-
-                    ViewDispatcher* view_disp = learn_ctx->app_ctx->view_dispatcher;
-                    view_dispatcher_switch_to_view(view_disp, XRemoteViewLearn);
+                    model->ok_pressed = true;
                 }
                 else if (event->key == InputKeyRight)
                 {
                     model->right_pressed = true;
                 }
-                else if (event->key == InputKeyOk)
-                {
-                    model->ok_pressed = true;
-                }
-            }
-            else if (event->type == InputTypeShort &&
-                    event->key == InputKeyBack &&
-                    exit == XRemoteAppExitHold)
-            {
-                model->back_pressed = true;
-            }
-            else if (event->type == InputTypeLong &&
-                    event->key == InputKeyBack &&
-                    exit == XRemoteAppExitPress)
-            {
-                model->back_pressed = true;
             }
             else if (event->type == InputTypeRelease)
             {
-                if (event->key == InputKeyUp) model->up_pressed = false;
-                else if (event->key == InputKeyDown) model->down_pressed = false;
-                else if (event->key == InputKeyLeft) model->left_pressed = false;
-                else if (event->key == InputKeyRight) model->right_pressed = false;
+                if (event->key == InputKeyRight) model->right_pressed = false;
                 else if (event->key == InputKeyOk) model->ok_pressed = false;
-                else if (event->key == InputKeyBack) model->back_pressed = false;
             }
         },
         true);
 }
 
-
-static bool xremote_signal_view_input_callback(InputEvent* event, void* context)
+static bool xremote_learn_success_view_input_callback(InputEvent* event, void* context)
 {
     furi_assert(context);
     XRemoteView* view = (XRemoteView*)context;
-    XRemoteAppContext* app_ctx = xremote_view_get_app_context(view);
-    XRemoteAppExit exit = app_ctx->app_settings->exit_behavior;
 
-    if (event->key == InputKeyBack &&
-        event->type == InputTypeShort &&
-        exit == XRemoteAppExitPress) return false;
-    else if (event->key == InputKeyBack &&
-        event->type == InputTypeLong &&
-        exit == XRemoteAppExitHold) return false;
+    if (event->key == InputKeyBack)
+    {
+        XRemoteLearnContext* learn_ctx = xremote_view_get_context(view);
+        xremote_signal_receiver_resume(learn_ctx->rx_ctx);
 
-    xremote_signal_view_process(view, event);
+        ViewDispatcher* view_disp = learn_ctx->app_ctx->view_dispatcher;
+        view_dispatcher_switch_to_view(view_disp, XRemoteViewLearn);
+
+        return false;
+    }
+
+    xremote_learn_success_view_process(view, event);
     return true;
 }
 
-XRemoteView* xremote_signal_view_alloc(void* app_ctx, void *learn_ctx)
+XRemoteView* xremote_learn_success_view_alloc(void* app_ctx, void *learn_ctx)
 {
     XRemoteView *view = xremote_view_alloc(app_ctx,
-        xremote_signal_view_input_callback,
-        xremote_signal_view_draw_callback);
+        xremote_learn_success_view_input_callback,
+        xremote_learn_success_view_draw_callback);
     xremote_view_set_context(view, learn_ctx, NULL);
 
     with_view_model(
@@ -176,9 +136,6 @@ XRemoteView* xremote_signal_view_alloc(void* app_ctx, void *learn_ctx)
         XRemoteViewModel* model,
         {
             model->context = learn_ctx;
-            model->up_pressed = false;
-            model->down_pressed = false;
-            model->left_pressed = false;
             model->right_pressed = false;
             model->back_pressed = false;
             model->ok_pressed = false;

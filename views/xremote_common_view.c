@@ -206,9 +206,10 @@ void xremote_canvas_draw_header(Canvas* canvas, ViewOrientation orient, const ch
 
     canvas_set_font(canvas, FontPrimary);
     elements_multiline_text_aligned(canvas, x, 0, align, AlignTop, "XRemote");
-
     canvas_set_font(canvas, FontSecondary);
-    elements_multiline_text_aligned(canvas, x, 12, align, AlignTop, section);
+
+    if (section != NULL)
+        elements_multiline_text_aligned(canvas, x, 12, align, AlignTop, section);
 }
 
 void xremote_canvas_draw_exit_footer(Canvas* canvas, ViewOrientation orient, const char *text)
