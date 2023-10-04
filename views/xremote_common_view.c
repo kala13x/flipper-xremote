@@ -10,7 +10,7 @@
 #include "../xremote_app.h"
 
 struct XRemoteView {
-    XRemoteViewClearCallback on_clear;
+    XRemoteClearCallback on_clear;
     XRemoteAppContext* app_ctx;
     View* view;
     void *context;
@@ -39,17 +39,14 @@ void xremote_view_clear_context(XRemoteView* rview)
 {
     furi_assert(rview);
 
-    if (rview->context != NULL &&
-        rview->on_clear != NULL)
-    {
+    if (rview->context && rview->on_clear)
         rview->on_clear(rview->context);
-        rview->context = NULL;
-    }
+
+    rview->context = NULL;
 }
 
-void xremote_view_set_context(XRemoteView* rview, void *context, XRemoteViewClearCallback on_clear)
+void xremote_view_set_context(XRemoteView* rview, void *context, XRemoteClearCallback on_clear)
 {
-    furi_assert(rview);
     xremote_view_clear_context(rview);
     rview->context = context;
     rview->on_clear = on_clear;

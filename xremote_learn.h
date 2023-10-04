@@ -9,5 +9,14 @@
 #pragma once
 
 #include "xremote_app.h"
+#include "xremote_signal.h"
+
+typedef struct {
+    XRemoteClearCallback on_clear;
+    XRemoteSignalReceiver* rx_ctx;
+    XRemoteAppContext* app_ctx;
+    XRemoteView* signal_view;
+    void* context;
+} XRemoteLearnContext;
 
 XRemoteApp* xremote_learn_alloc(XRemoteAppContext* app_ctx);

@@ -80,6 +80,7 @@ typedef struct {
 
 typedef enum {
     XRemoteViewNone,
+    XRemoteViewSignal,
 
     /* Main page */
     XRemoteViewSubmenu,
@@ -98,8 +99,9 @@ typedef enum {
 } XRemoteViewID;
 
 typedef struct XRemoteView XRemoteView;
-typedef void (*XRemoteViewClearCallback)(void *context);
+typedef void (*XRemoteClearCallback)(void *context);
 typedef void (*XRemoteViewDrawFunction)(Canvas*, XRemoteViewModel*);
+typedef XRemoteView* (*XRemoteViewAllocator)(void* app_ctx);
 
 void xremote_canvas_draw_header(Canvas* canvas, ViewOrientation orient, const char* section);
 void xremote_canvas_draw_exit_footer(Canvas* canvas, ViewOrientation orient, const char *text);
@@ -118,7 +120,7 @@ InfraredRemoteButton* xremote_view_get_button_by_name(XRemoteView *rview, const 
 bool xremote_view_press_button(XRemoteView *rview, InfraredRemoteButton* button);
 bool xremote_view_send_ir_msg_by_name(XRemoteView *rview, const char *name);
 
-void xremote_view_set_context(XRemoteView* rview, void *context, XRemoteViewClearCallback on_clear);
+void xremote_view_set_context(XRemoteView* rview, void *context, XRemoteClearCallback on_clear);
 void* xremote_view_get_context(XRemoteView* rview);
 void xremote_view_clear_context(XRemoteView* rview);
 void* xremote_view_get_app_context(XRemoteView* rview);
