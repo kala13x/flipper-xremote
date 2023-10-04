@@ -17,7 +17,7 @@ static void xremote_learn_view_draw_callback(Canvas* canvas, void* context)
     XRemoteAppContext *app_ctx = model->context;
 
     ViewOrientation orientation = app_ctx->app_settings->orientation;
-    uint64_t x = orientation == ViewOrientationVertical ? 40 : 15;
+    uint8_t x = orientation == ViewOrientationVertical ? 40 : 15;
 
     xremote_canvas_draw_header(canvas, orientation, "Learn");
     canvas_set_font(canvas, FontSecondary);
@@ -53,23 +53,25 @@ static void xremote_signal_view_draw_callback(Canvas* canvas, void* context)
     XRemoteAppContext* app_ctx = learn_ctx->app_ctx;
     ViewOrientation orientation = app_ctx->app_settings->orientation;
 
-    xremote_canvas_draw_header(canvas, orientation, "RX signal");
+    xremote_canvas_draw_header(canvas, orientation, "IR Signal");
     canvas_set_font(canvas, FontSecondary);
 
     InfraredMessage* message = infrared_signal_get_message(learn_ctx->rx_signal);
     const char *infrared_protocol = infrared_get_protocol_name(message->protocol);
-    uint64_t y = orientation == ViewOrientationVertical ? 30 : 10;
+    uint8_t y = orientation == ViewOrientationVertical ? 30 : 10;
 
     char signal[128];
-    snprintf(signal, sizeof(signal),
-        "Protocol: %s\n"
-        "Address: 0x%lX\n"
-        "Command: 0x%lX\n"
-        "Repeat: %s\r\n",
+    snprintf(signal,
+        sizeof(signal),
+        "Proto: %s\n"
+        "Addr: 0x%lX\n"
+        "Cmd: 0x%lX\n"
+        "Rep: %s\r\n",
         infrared_protocol,
         message->address,
         message->command,
-        message->repeat ? "Yes" : "No");
+        message->repeat ?
+            "Yes" : "No");
 
     elements_multiline_text_aligned(canvas, 0, y, AlignLeft, AlignTop, signal);
 
