@@ -20,16 +20,16 @@ struct XRemoteSignalReceiver {
     bool started;
 };
 
-static void xremote_signal_receiver_rx_callback(void* context, InfraredWorkerSignal* rx_signal)
+static void xremote_signal_receiver_rx_callback(void* context, InfraredWorkerSignal* ir_signal)
 {
     furi_assert(context);
     XRemoteSignalReceiver *rx_ctx = context;
     xremote_app_notification_blink(rx_ctx->notifications);
 
-    if (infrared_worker_signal_is_decoded(rx_signal))
+    if (infrared_worker_signal_is_decoded(ir_signal))
     {
         const InfraredMessage* message;
-        message = infrared_worker_get_decoded_signal(rx_signal);
+        message = infrared_worker_get_decoded_signal(ir_signal);
         infrared_signal_set_message(rx_ctx->signal, message);
     }
     else
@@ -37,7 +37,7 @@ static void xremote_signal_receiver_rx_callback(void* context, InfraredWorkerSig
         const uint32_t* timings;
         size_t timings_size = 0;
 
-        infrared_worker_get_raw_signal(rx_signal, &timings, &timings_size);
+        infrared_worker_get_raw_signal(ir_signal, &timings, &timings_size);
         infrared_signal_set_raw_signal(rx_ctx->signal, timings, timings_size,
             INFRARED_COMMON_CARRIER_FREQUENCY, INFRARED_COMMON_DUTY_CYCLE);
     }

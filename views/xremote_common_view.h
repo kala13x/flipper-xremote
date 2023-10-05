@@ -91,6 +91,8 @@ typedef struct {
 typedef enum {
     XRemoteViewNone,
     XRemoteViewSignal,
+    XRemoteViewTextInput,
+    XRemoteViewDialogExit,
 
     /* Main page */
     XRemoteViewSubmenu,

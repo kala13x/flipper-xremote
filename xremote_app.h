@@ -14,6 +14,7 @@
 #include <gui/view_dispatcher.h>
 #include <gui/modules/submenu.h>
 #include <gui/modules/dialog_ex.h>
+#include <gui/modules/text_input.h>
 #include <gui/modules/variable_item_list.h>
 
 #include <notification/notification.h>

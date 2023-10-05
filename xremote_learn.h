@@ -11,16 +11,15 @@
 #include "xremote_app.h"
 #include "xremote_signal.h"
 
-typedef struct {
-    XRemoteSignalReceiver* ir_receiver;
-    XRemoteClearCallback on_clear;
-    XRemoteAppContext* app_ctx;
-    InfraredSignal *rx_signal;
-    XRemoteView* signal_view;
-    bool processing_signal;
-    bool finish_learning;
-    uint8_t current_button;
-    void* context;
-} XRemoteLearnContext;
+typedef struct XRemoteLearnContext XRemoteLearnContext;
+
+const char* xremote_learn_get_curr_button_name(XRemoteLearnContext *learn_ctx);
+int xremote_learn_get_curr_button_index(XRemoteLearnContext *learn_ctx);
+void xremote_learn_context_ask_finish(XRemoteLearnContext *learn_ctx);
+
+XRemoteSignalReceiver* xremote_learn_get_ir_receiver(XRemoteLearnContext *learn_ctx);
+XRemoteAppContext* xremote_learn_get_app_context(XRemoteLearnContext *learn_ctx);
+InfraredRemote* xremote_learn_get_ir_remote(XRemoteLearnContext *learn_ctx);
+InfraredSignal* xremote_learn_get_ir_signal(XRemoteLearnContext *learn_ctx);
 
 XRemoteApp* xremote_learn_alloc(XRemoteAppContext* app_ctx);

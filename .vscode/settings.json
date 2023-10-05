@@ -10,6 +10,7 @@
         "xremote_navigation_view.h": "c",
         "xremote_settings_view.h": "c",
         "xremote_learn_view.h": "c",
-        "system_error": "c"
+        "system_error": "c",
+        "typeinfo": "c"
     }
 }

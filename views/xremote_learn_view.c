@@ -15,17 +15,17 @@ static void xremote_learn_view_draw_callback(Canvas* canvas, void* context)
     furi_assert(context);
     XRemoteViewModel* model = context;
     XRemoteLearnContext* learn_ctx = model->context;
-    XRemoteAppContext* app_ctx = learn_ctx->app_ctx;
+
+    XRemoteAppContext* app_ctx = xremote_learn_get_app_context(learn_ctx);
+    const char *button_name = xremote_learn_get_curr_button_name(learn_ctx);
 
     ViewOrientation orientation = app_ctx->app_settings->orientation;
     xremote_canvas_draw_header(canvas, orientation, "Learn");
 
-    const char *name = xremote_button_get_name(learn_ctx->current_button);
     char info_text[128];
-
     snprintf(info_text, sizeof(info_text),
         "Press\n\"%s\"\nbutton on\nthe remote.",
-        name != NULL ? name : "any");
+        button_name != NULL ? button_name : "");
 
     if (orientation == ViewOrientationHorizontal)
     {
@@ -49,15 +49,17 @@ static void xremote_learn_success_view_draw_callback(Canvas* canvas, void* conte
     furi_assert(context);
     XRemoteViewModel* model = context;
     XRemoteLearnContext* learn_ctx = model->context;
-    XRemoteAppContext* app_ctx = learn_ctx->app_ctx;
+
+    XRemoteAppContext* app_ctx = xremote_learn_get_app_context(learn_ctx);
+    InfraredSignal *ir_signal = xremote_learn_get_ir_signal(learn_ctx);
 
     xremote_canvas_draw_header(canvas, app_ctx->app_settings->orientation, NULL);
-    const char *button_name = xremote_button_get_name(learn_ctx->current_button);
+    const char *button_name = xremote_learn_get_curr_button_name(learn_ctx);
     char signal_info[128];
 
-    if (infrared_signal_is_raw(learn_ctx->rx_signal))
+    if (infrared_signal_is_raw(ir_signal))
     {
-        InfraredRawSignal* raw = infrared_signal_get_raw_signal(learn_ctx->rx_signal);
+        InfraredRawSignal* raw = infrared_signal_get_raw_signal(ir_signal);
 
         snprintf(signal_info, sizeof(signal_info),
             "Name: %s\n"
@@ -70,7 +72,7 @@ static void xremote_learn_success_view_draw_callback(Canvas* canvas, void* conte
     }
     else
     {
-        InfraredMessage* message = infrared_signal_get_message(learn_ctx->rx_signal);
+        InfraredMessage* message = infrared_signal_get_message(ir_signal);
         const char *infrared_protocol = infrared_get_protocol_name(message->protocol);
 
         snprintf(signal_info, sizeof(signal_info),
@@ -112,15 +114,13 @@ static void xremote_learn_success_view_process(XRemoteView* view, InputEvent* ev
 
             if (event->type == InputTypePress)
             {
-                XRemoteLearnContext* learn_ctx = xremote_view_get_context(view);
                 XRemoteAppContext* app_ctx = xremote_view_get_app_context(view);
                 ViewDispatcher* view_disp = app_ctx->view_dispatcher;
 
                 if (event->key == InputKeyOk)
                 {
                     model->ok_pressed = true;
-                    learn_ctx->finish_learning = true;
-                    view_dispatcher_send_custom_event(view_disp, XRemoteEventSignalFinish);
+                    xremote_learn_context_ask_finish(xremote_view_get_context(view));
                 }
                 else if (event->key == InputKeyBack)
                 {
