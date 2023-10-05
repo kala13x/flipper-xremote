@@ -50,8 +50,11 @@
 typedef enum {
     XRemoteEventReserved = 200,
     XRemoteEventSignalReceived,
-    XRemoteEventSignalSaved,
-    XRemoteEventSignalRetry
+    XRemoteEventSignalFinish,
+    XRemoteEventSignalSave,
+    XRemoteEventSignalRetry,
+    XRemoteEventSignalSkip,
+    XRemoteEventSignalExit
 } XRemoteEvent;
 
 typedef enum {
@@ -109,6 +112,9 @@ typedef struct XRemoteView XRemoteView;
 typedef void (*XRemoteClearCallback)(void *context);
 typedef void (*XRemoteViewDrawFunction)(Canvas*, XRemoteViewModel*);
 typedef XRemoteView* (*XRemoteViewAllocator)(void* app_ctx);
+
+#define XREMOTE_BUTTON_COUNT   26
+const char* xremote_button_get_name(int index);
 
 void xremote_canvas_draw_header(Canvas* canvas, ViewOrientation orient, const char* section);
 void xremote_canvas_draw_exit_footer(Canvas* canvas, ViewOrientation orient, const char *text);

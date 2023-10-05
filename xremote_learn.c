@@ -21,30 +21,63 @@ static uint32_t xremote_learn_success_view_exit_callback(void* context)
     return XRemoteViewLearn;
 }
 
+static void xremote_learn_send_event(XRemoteLearnContext* learn_ctx, XRemoteEvent event)
+{
+    ViewDispatcher* view_disp = learn_ctx->app_ctx->view_dispatcher;
+    view_dispatcher_send_custom_event(view_disp, event);
+}
+
 static void xremote_learn_signal_callback(void *context, InfraredSignal* signal)
 {
     XRemoteLearnContext* learn_ctx = context;
-    if (learn_ctx->processing_signal) return;
-
-    infrared_signal_set_signal(learn_ctx->rx_signal, signal);
+    xremote_app_assert_void(!learn_ctx->processing_signal);
+    xremote_app_assert_void(!learn_ctx->finish_learning);
     learn_ctx->processing_signal = true;
 
-    ViewDispatcher* view_disp = learn_ctx->app_ctx->view_dispatcher;
-    view_dispatcher_send_custom_event(view_disp, XRemoteEventSignalReceived);
+    infrared_signal_set_signal(learn_ctx->rx_signal, signal);
+    xremote_learn_send_event(learn_ctx, XRemoteEventSignalReceived);
 }
 
 static bool xremote_learn_custom_event_callback(void* context, uint32_t event)
 {
+    xremote_app_assert(context, false);
     XRemoteLearnContext *learn_ctx = context;
     ViewDispatcher* view_disp = learn_ctx->app_ctx->view_dispatcher;
+
+    if (event != XRemoteEventSignalFinish &&
+        learn_ctx->finish_learning) return true;
 
     if (event == XRemoteEventSignalReceived)
     {
         xremote_signal_receiver_stop(learn_ctx->ir_receiver);
         view_dispatcher_switch_to_view(view_disp, XRemoteViewSignal);
     }
-    else if (event == XRemoteEventSignalSaved)
+    else if (event == XRemoteEventSignalSave)
     {
+        learn_ctx->current_button++;
+        if (learn_ctx->current_button >= XREMOTE_BUTTON_COUNT)
+        {
+            learn_ctx->finish_learning = true;
+            xremote_signal_receiver_stop(learn_ctx->ir_receiver);
+            xremote_learn_send_event(learn_ctx, XRemoteEventSignalFinish);
+            return true;
+        }
+
+        learn_ctx->processing_signal = false;
+        xremote_signal_receiver_start(learn_ctx->ir_receiver);
+        view_dispatcher_switch_to_view(view_disp, XRemoteViewLearn);
+    }
+    else if (event == XRemoteEventSignalSkip)
+    {
+        learn_ctx->current_button++;
+        if (learn_ctx->current_button >= XREMOTE_BUTTON_COUNT)
+        {
+            learn_ctx->finish_learning = true;
+            xremote_signal_receiver_stop(learn_ctx->ir_receiver);
+            xremote_learn_send_event(learn_ctx, XRemoteEventSignalFinish);
+            return true;
+        }
+
         learn_ctx->processing_signal = false;
         xremote_signal_receiver_start(learn_ctx->ir_receiver);
         view_dispatcher_switch_to_view(view_disp, XRemoteViewLearn);
@@ -54,6 +87,18 @@ static bool xremote_learn_custom_event_callback(void* context, uint32_t event)
         learn_ctx->processing_signal = false;
         xremote_signal_receiver_start(learn_ctx->ir_receiver);
         view_dispatcher_switch_to_view(view_disp, XRemoteViewLearn);
+    }
+    else if (event == XRemoteEventSignalFinish)
+    {
+        learn_ctx->processing_signal = false;
+        xremote_signal_receiver_stop(learn_ctx->ir_receiver);
+        view_dispatcher_switch_to_view(view_disp, XRemoteViewSubmenu);
+    }
+    else if (event == XRemoteEventSignalExit)
+    {
+        learn_ctx->processing_signal = false;
+        xremote_signal_receiver_stop(learn_ctx->ir_receiver);
+        view_dispatcher_switch_to_view(view_disp, XRemoteViewSubmenu);
     }
 
     return true;
@@ -65,7 +110,10 @@ static XRemoteLearnContext* xremote_learn_context_alloc(XRemoteAppContext* app_c
     learn_ctx->signal_view = xremote_learn_success_view_alloc(app_ctx, learn_ctx);
     learn_ctx->ir_receiver = xremote_signal_receiver_alloc(app_ctx);
     learn_ctx->rx_signal = infrared_signal_alloc();
+
     learn_ctx->processing_signal = false;
+    learn_ctx->finish_learning = false;
+    learn_ctx->current_button = 0;
     learn_ctx->app_ctx = app_ctx;
 
     View* view = xremote_view_get_view(learn_ctx->signal_view);
@@ -103,10 +151,16 @@ static void xremote_learn_context_clear_callback(void* context)
 XRemoteApp* xremote_learn_alloc(XRemoteAppContext* app_ctx)
 {
     XRemoteApp* app = xremote_app_alloc(app_ctx);
-    xremote_app_view_alloc(app, XRemoteViewLearn, xremote_learn_view_alloc);
-    xremote_app_view_set_previous_callback(app, xremote_learn_view_exit_callback);
+    app->view_id = XRemoteViewLearn;
 
     XRemoteLearnContext* learn = xremote_learn_context_alloc(app_ctx);
+    app->view_ctx = xremote_learn_view_alloc(app->app_ctx, learn);
+    View* view = xremote_view_get_view(app->view_ctx);
+
+    ViewDispatcher* view_disp = app_ctx->view_dispatcher;
+    view_dispatcher_add_view(view_disp, app->view_id, view);
+
+    xremote_app_view_set_previous_callback(app, xremote_learn_view_exit_callback);
     xremote_app_set_view_context(app, learn, xremote_learn_context_clear_callback);
 
     xremote_signal_receiver_start(learn->ir_receiver);

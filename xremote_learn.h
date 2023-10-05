@@ -18,6 +18,8 @@ typedef struct {
     InfraredSignal *rx_signal;
     XRemoteView* signal_view;
     bool processing_signal;
+    bool finish_learning;
+    uint8_t current_button;
     void* context;
 } XRemoteLearnContext;
 
