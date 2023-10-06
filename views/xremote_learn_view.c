@@ -177,7 +177,7 @@ static void xremote_learn_view_process(XRemoteView* view, InputEvent* event)
                     (event->type == InputTypeLong && exit == XRemoteAppExitHold))
                 {
                     model->back_pressed = true;
-                    view_dispatcher_send_custom_event(view_disp, XRemoteEventSignalExit);
+                    view_dispatcher_send_custom_event(view_disp, XRemoteEventSignalAskExit);
                 }
             }
             else if (event->type == InputTypeRelease)

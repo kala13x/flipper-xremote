@@ -54,6 +54,7 @@ typedef enum {
     XRemoteEventSignalSave,
     XRemoteEventSignalRetry,
     XRemoteEventSignalSkip,
+    XRemoteEventSignalAskExit,
     XRemoteEventSignalExit
 } XRemoteEvent;
 

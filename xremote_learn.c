@@ -21,15 +21,16 @@ struct XRemoteLearnContext {
     InfraredRemote* ir_remote;
     InfraredSignal* ir_signal;
 
-    /* Keyboard input context */
+    /* User interactions */
     TextInput* text_input;
-    char text_store[XREMOTE_TEXT_MAX + 1];
+    DialogEx* dialog_ex;
 
     /* User context and clear callback */
     XRemoteClearCallback on_clear;
     void* context;
 
     /* Private control flags */
+    char text_store[XREMOTE_TEXT_MAX + 1];
     uint8_t current_button;
     bool finish_learning;
     bool stop_receiver;
@@ -128,6 +129,68 @@ static void xremote_learn_text_input_callback(void* context)
     xremote_learn_send_event(learn_ctx, XRemoteEventSignalExit);
 }
 
+static void xremote_learn_dialog_exit_callback(DialogExResult result, void* context)
+{
+    XRemoteLearnContext* learn_ctx = (XRemoteLearnContext*)context;
+    xremote_learn_switch_to_view(learn_ctx, XRemoteViewSubmenu);
+
+    if (result == DialogExResultLeft)
+        xremote_learn_send_event(learn_ctx, XRemoteEventSignalExit);
+    else if (result == DialogExResultRight)
+        xremote_learn_send_event(learn_ctx, XRemoteEventSignalRetry);
+    else if (result == DialogExResultCenter)
+        xremote_learn_send_event(learn_ctx, XRemoteEventSignalFinish);
+}
+
+static void xremote_learn_exit_dialog_free(XRemoteLearnContext *learn_ctx)
+{
+    xremote_app_assert_void(learn_ctx);
+    xremote_app_assert_void(learn_ctx->dialog_ex);
+
+    ViewDispatcher* view_disp = learn_ctx->app_ctx->view_dispatcher;
+    view_dispatcher_remove_view(view_disp, XRemoteViewDialogExit);
+
+    dialog_ex_free(learn_ctx->dialog_ex);
+    learn_ctx->dialog_ex = NULL;
+}
+
+static void xremote_learn_exit_dialog_alloc(XRemoteLearnContext *learn_ctx, const char *header, DialogExResultCallback callback)
+{
+    xremote_app_assert_void(learn_ctx);
+    xremote_learn_exit_dialog_free(learn_ctx);
+
+    ViewDispatcher *view_disp = learn_ctx->app_ctx->view_dispatcher;
+    const char *dialog_text = "All unsaved data\nwill be lost!";
+
+    learn_ctx->dialog_ex = dialog_ex_alloc();
+    View *view = dialog_ex_get_view(learn_ctx->dialog_ex);
+    view_dispatcher_add_view(view_disp, XRemoteViewDialogExit, view);
+
+    dialog_ex_set_header(learn_ctx->dialog_ex, header, 64, 11, AlignCenter, AlignTop);
+    dialog_ex_set_text(learn_ctx->dialog_ex, dialog_text, 64, 25, AlignCenter, AlignTop);
+    dialog_ex_set_icon(learn_ctx->dialog_ex, 0, 0, NULL);
+
+    dialog_ex_set_left_button_text(learn_ctx->dialog_ex, "Exit");
+    dialog_ex_set_center_button_text(learn_ctx->dialog_ex, "Save");
+    dialog_ex_set_right_button_text(learn_ctx->dialog_ex, "Stay");
+
+    dialog_ex_set_result_callback(learn_ctx->dialog_ex, callback);
+    dialog_ex_set_context(learn_ctx->dialog_ex, learn_ctx);
+}
+
+static void xremote_learn_exit_dialog_ask(XRemoteLearnContext *learn_ctx)
+{
+    xremote_app_assert_void(learn_ctx);
+    xremote_learn_exit_dialog_alloc(learn_ctx,
+        "Exit to XRemote Menu?",
+        xremote_learn_dialog_exit_callback);
+
+    xremote_learn_switch_to_view(learn_ctx, XRemoteViewDialogExit);
+
+    // TODO: check and exit
+    //xremote_learn_switch_to_view(learn_ctx, XRemoteViewSubmenu);
+}
+
 static void xremote_learn_store_database_to_file(XRemoteLearnContext *learn_ctx)
 {
     xremote_app_assert_void(learn_ctx);
@@ -208,6 +271,11 @@ static bool xremote_learn_custom_event_callback(void* context, uint32_t event)
         xremote_learn_context_rx_stop(learn_ctx);
         xremote_learn_store_database_to_file(learn_ctx);
     }
+    else if (event == XRemoteEventSignalAskExit)
+    {
+        xremote_learn_context_rx_stop(learn_ctx);
+        xremote_learn_exit_dialog_ask(learn_ctx);
+    }
     else if (event == XRemoteEventSignalExit)
     {
         xremote_learn_context_rx_stop(learn_ctx);
@@ -226,6 +294,7 @@ static XRemoteLearnContext* xremote_learn_context_alloc(XRemoteAppContext* app_c
     learn_ctx->stop_receiver = false;
     learn_ctx->current_button = 0;
     learn_ctx->text_store[0] = 0;
+    learn_ctx->dialog_ex = NULL;
     learn_ctx->app_ctx = app_ctx;
 
     learn_ctx->signal_view = xremote_learn_success_view_alloc(app_ctx, learn_ctx);
@@ -252,6 +321,7 @@ static void xremote_learn_context_free(XRemoteLearnContext* learn_ctx)
 {
     xremote_app_assert_void(learn_ctx);
     xremote_signal_receiver_stop(learn_ctx->ir_receiver);
+    xremote_learn_exit_dialog_free(learn_ctx);
 
     ViewDispatcher* view_disp = learn_ctx->app_ctx->view_dispatcher;
     view_dispatcher_remove_view(view_disp, XRemoteViewTextInput);
