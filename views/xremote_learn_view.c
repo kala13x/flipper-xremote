@@ -110,27 +110,25 @@ static void xremote_learn_success_view_process(XRemoteView* view, InputEvent* ev
         xremote_view_get_view(view),
         XRemoteViewModel* model,
         {
-            model->context = xremote_view_get_context(view);
+            XRemoteLearnContext *learn_ctx = xremote_view_get_context(view);
+            model->context = learn_ctx;
 
             if (event->type == InputTypePress)
             {
-                XRemoteAppContext* app_ctx = xremote_view_get_app_context(view);
-                ViewDispatcher* view_disp = app_ctx->view_dispatcher;
-
                 if (event->key == InputKeyOk)
                 {
                     model->ok_pressed = true;
-                    xremote_learn_context_ask_finish(xremote_view_get_context(view));
+                    xremote_learn_send_event(learn_ctx, XRemoteEventSignalFinish);
                 }
                 else if (event->key == InputKeyBack)
                 {
                     model->back_pressed = true;
-                    view_dispatcher_send_custom_event(view_disp, XRemoteEventSignalRetry);
+                    xremote_learn_send_event(learn_ctx, XRemoteEventSignalRetry);
                 }
                 else if (event->key == InputKeyRight)
                 {
                     model->right_pressed = true;
-                    view_dispatcher_send_custom_event(view_disp, XRemoteEventSignalSave);
+                    xremote_learn_send_event(learn_ctx, XRemoteEventSignalSave);
                 }
             }
             else if (event->type == InputTypeRelease)
@@ -150,23 +148,23 @@ static void xremote_learn_view_process(XRemoteView* view, InputEvent* event)
         xremote_view_get_view(view),
         XRemoteViewModel* model,
         {
-            XRemoteAppContext* app_ctx = xremote_view_get_app_context(view);
-            model->context = xremote_view_get_context(view);
+            XRemoteLearnContext *learn_ctx = xremote_view_get_context(view);
+            XRemoteAppContext *app_ctx = xremote_view_get_app_context(view);
 
             XRemoteAppExit exit = app_ctx->app_settings->exit_behavior;
-            ViewDispatcher* view_disp = app_ctx->view_dispatcher;
+            model->context = learn_ctx;
 
             if (event->type == InputTypePress)
             {
-                if (event->key == InputKeyOk)
+                if (event->key == InputKeyOk && xremote_learn_has_buttons(learn_ctx))
                 {
                     model->ok_pressed = true;
-                    view_dispatcher_send_custom_event(view_disp, XRemoteEventSignalFinish);
+                    xremote_learn_send_event(learn_ctx, XRemoteEventSignalFinish);
                 }
                 else if (event->key == InputKeyRight)
                 {
                     model->right_pressed = true;
-                    view_dispatcher_send_custom_event(view_disp, XRemoteEventSignalSkip);
+                    xremote_learn_send_event(learn_ctx, XRemoteEventSignalSkip);
                 }
             }
             else if ((event->type == InputTypeShort ||
@@ -177,7 +175,7 @@ static void xremote_learn_view_process(XRemoteView* view, InputEvent* event)
                     (event->type == InputTypeLong && exit == XRemoteAppExitHold))
                 {
                     model->back_pressed = true;
-                    view_dispatcher_send_custom_event(view_disp, XRemoteEventSignalAskExit);
+                    xremote_learn_send_event(learn_ctx, XRemoteEventSignalAskExit);
                 }
             }
             else if (event->type == InputTypeRelease)

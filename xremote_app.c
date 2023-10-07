@@ -157,6 +157,15 @@ void xremote_app_context_notify_led(XRemoteAppContext* app_ctx)
     xremote_app_notification_blink(app_ctx->notifications);
 }
 
+bool xremote_app_send_signal(XRemoteAppContext* app_ctx, InfraredSignal* signal)
+{
+    xremote_app_assert(signal, false);
+    XRemoteAppSettings* settings = app_ctx->app_settings;
+    infrared_signal_transmit_times(signal, settings->repeat_count);
+    xremote_app_context_notify_led(app_ctx);
+    return true;
+}
+
 void xremote_app_view_alloc(XRemoteApp *app, uint32_t view_id, XRemoteViewAllocator allocator)
 {
     furi_assert(app);

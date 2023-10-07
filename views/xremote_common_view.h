@@ -20,6 +20,7 @@
 
 #include "../infrared/infrared_remote.h"
 
+#define XREMOTE_BUTTON_COUNT            26
 #define XREMOTE_COMMAND_POWER           "Power"
 #define XREMOTE_COMMAND_SETUP           "Setup"
 #define XREMOTE_COMMAND_INPUT           "Input"
@@ -53,6 +54,7 @@ typedef enum {
     XRemoteEventSignalFinish,
     XRemoteEventSignalSave,
     XRemoteEventSignalRetry,
+    XRemoteEventSignalSend,
     XRemoteEventSignalSkip,
     XRemoteEventSignalAskExit,
     XRemoteEventSignalExit
@@ -99,6 +101,7 @@ typedef enum {
     XRemoteViewSubmenu,
     XRemoteViewLearn,
     XRemoteViewSaved,
+    XRemoteViewAnalyzer,
     XRemoteViewSettings,
     XRemoteViewAbout,
 
@@ -116,7 +119,6 @@ typedef void (*XRemoteClearCallback)(void *context);
 typedef void (*XRemoteViewDrawFunction)(Canvas*, XRemoteViewModel*);
 typedef XRemoteView* (*XRemoteViewAllocator)(void* app_ctx);
 
-#define XREMOTE_BUTTON_COUNT   26
 const char* xremote_button_get_name(int index);
 
 void xremote_canvas_draw_header(Canvas* canvas, ViewOrientation orient, const char* section);

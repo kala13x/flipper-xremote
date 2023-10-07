@@ -11,6 +11,7 @@
         "xremote_settings_view.h": "c",
         "xremote_learn_view.h": "c",
         "system_error": "c",
-        "typeinfo": "c"
+        "typeinfo": "c",
+        "xremote_analyzer.h": "c"
     }
 }

@@ -66,6 +66,7 @@ void xremote_app_context_free(XRemoteAppContext* ctx);
 const char* xremote_app_context_get_exit_str(XRemoteAppContext* ctx);
 void xremote_app_context_notify_led(XRemoteAppContext* app_ctx);
 void xremote_app_notification_blink(NotificationApp* notifications);
+bool xremote_app_send_signal(XRemoteAppContext* app_ctx, InfraredSignal* signal);
 
 typedef struct {
     XRemoteClearCallback on_clear;
