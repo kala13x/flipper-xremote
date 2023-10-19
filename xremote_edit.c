@@ -28,9 +28,9 @@ static uint32_t xremote_edit_view_exit_callback(void* context) {
 }
 
 static void xremote_edit_buttons_store(XRemoteAppButtons* buttons) {
-    XRemoteAppContext* app_ctx = buttons->app_ctx;
+    FuriString* path = buttons->app_ctx->file_path;
     infrared_remote_store(buttons->remote);
-    xremote_app_extension_store(buttons, app_ctx->file_path);
+    xremote_app_extension_store(buttons, path);
 }
 
 static void xremote_item_update_item(VariableItem* item, FuriString* button) {

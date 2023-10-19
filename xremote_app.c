@@ -90,6 +90,9 @@ bool xremote_app_extension_load(XRemoteAppButtons* buttons, FuriString* path) {
         if(!flipper_format_read_string(ff, "custom_right", tmp)) break;
         furi_string_set(buttons->custom_right, tmp);
 
+        if(!flipper_format_read_string(ff, "custom_ok_hold", tmp)) break;
+        furi_string_set(buttons->custom_ok_hold, tmp);
+
         if(!flipper_format_read_string(ff, "custom_up_hold", tmp)) break;
         furi_string_set(buttons->custom_up_hold, tmp);
 
@@ -101,9 +104,6 @@ bool xremote_app_extension_load(XRemoteAppButtons* buttons, FuriString* path) {
 
         if(!flipper_format_read_string(ff, "custom_right_hold", tmp)) break;
         furi_string_set(buttons->custom_right_hold, tmp);
-
-        if(!flipper_format_read_string(ff, "custom_ok_hold", tmp)) break;
-        furi_string_set(buttons->custom_ok_hold, tmp);
 
         success = true;
     } while(false);
@@ -172,11 +172,11 @@ XRemoteAppButtons* xremote_app_buttons_alloc() {
     buttons->custom_left = furi_string_alloc_set_str(XREMOTE_COMMAND_LEFT);
     buttons->custom_right = furi_string_alloc_set_str(XREMOTE_COMMAND_RIGHT);
     buttons->custom_ok = furi_string_alloc_set_str(XREMOTE_COMMAND_OK);
-    buttons->custom_up_hold = furi_string_alloc_set_str(XREMOTE_COMMAND_POWER);
+    buttons->custom_up_hold = furi_string_alloc_set_str(XREMOTE_COMMAND_INPUT);
     buttons->custom_down_hold = furi_string_alloc_set_str(XREMOTE_COMMAND_SETUP);
-    buttons->custom_left_hold = furi_string_alloc_set_str(XREMOTE_COMMAND_INPUT);
+    buttons->custom_left_hold = furi_string_alloc_set_str(XREMOTE_COMMAND_MENU);
     buttons->custom_right_hold = furi_string_alloc_set_str(XREMOTE_COMMAND_LIST);
-    buttons->custom_ok_hold = furi_string_alloc_set_str(XREMOTE_COMMAND_MENU);
+    buttons->custom_ok_hold = furi_string_alloc_set_str(XREMOTE_COMMAND_POWER);
 
     return buttons;
 }
