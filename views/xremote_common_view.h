@@ -127,6 +127,7 @@ typedef XRemoteView* (*XRemoteViewAllocator)(void* app_ctx);
 typedef XRemoteView* (*XRemoteViewAllocator2)(void* app_ctx, void* model_ctx);
 
 const char* xremote_button_get_name(int index);
+int xremote_button_get_index(const char* name);
 
 void xremote_canvas_draw_header(Canvas* canvas, ViewOrientation orient, const char* section);
 void xremote_canvas_draw_exit_footer(Canvas* canvas, ViewOrientation orient, const char* text);
@@ -169,6 +170,7 @@ void xremote_canvas_draw_frame(
 
 XRemoteView*
     xremote_view_alloc(void* app_ctx, ViewInputCallback input_cb, ViewDrawCallback draw_cb);
+XRemoteView* xremote_view_alloc_empty();
 void xremote_view_free(XRemoteView* rview);
 
 InfraredRemoteButton* xremote_view_get_button_by_name(XRemoteView* rview, const char* name);
@@ -176,8 +178,12 @@ bool xremote_view_press_button(XRemoteView* rview, InfraredRemoteButton* button)
 bool xremote_view_send_ir_msg_by_name(XRemoteView* rview, const char* name);
 
 void xremote_view_model_context_set(XRemoteView* rview, void* model_ctx);
-void xremote_view_set_context(XRemoteView* rview, void* context, XRemoteClearCallback on_clear);
-void* xremote_view_get_context(XRemoteView* rview);
 void xremote_view_clear_context(XRemoteView* rview);
+
+void xremote_view_set_app_context(XRemoteView* rview, void* app_ctx);
+void xremote_view_set_context(XRemoteView* rview, void* context, XRemoteClearCallback on_clear);
+void xremote_view_set_view(XRemoteView* rview, View* view);
+
 void* xremote_view_get_app_context(XRemoteView* rview);
+void* xremote_view_get_context(XRemoteView* rview);
 View* xremote_view_get_view(XRemoteView* rview);

@@ -48,6 +48,14 @@ const char* xremote_button_get_name(int index) {
     return g_buttons[index].name;
 }
 
+int xremote_button_get_index(const char* name) {
+    size_t i;
+    for(i = 0; i < XREMOTE_BUTTON_COUNT; i++) {
+        if(!strcmp(name, g_buttons[i].name)) return g_buttons[i].index;
+    }
+    return -1;
+}
+
 struct XRemoteView {
     XRemoteClearCallback on_clear;
     XRemoteAppContext* app_ctx;
@@ -55,9 +63,14 @@ struct XRemoteView {
     void* context;
 };
 
+XRemoteView* xremote_view_alloc_empty() {
+    XRemoteView* remote_view = malloc(sizeof(XRemoteView));
+    return remote_view;
+}
+
 XRemoteView*
     xremote_view_alloc(void* app_ctx, ViewInputCallback input_cb, ViewDrawCallback draw_cb) {
-    XRemoteView* remote_view = malloc(sizeof(XRemoteView));
+    XRemoteView* remote_view = xremote_view_alloc_empty();
     remote_view->app_ctx = app_ctx;
     remote_view->view = view_alloc();
 
@@ -89,9 +102,19 @@ void xremote_view_set_context(XRemoteView* rview, void* context, XRemoteClearCal
     rview->on_clear = on_clear;
 }
 
+void xremote_view_set_view(XRemoteView* rview, View* view) {
+    xremote_view_clear_context(rview);
+    rview->view = view;
+}
+
 void* xremote_view_get_context(XRemoteView* rview) {
     furi_assert(rview);
     return rview->context;
+}
+
+void xremote_view_set_app_context(XRemoteView* rview, void* app_ctx) {
+    furi_assert(rview);
+    rview->app_ctx = app_ctx;
 }
 
 void* xremote_view_get_app_context(XRemoteView* rview) {

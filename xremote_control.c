@@ -7,6 +7,7 @@
  */
 
 #include "xremote_control.h"
+#include "xremote_edit.h"
 #include "infrared/infrared_remote.h"
 
 #include "views/xremote_general_view.h"
@@ -45,10 +46,15 @@ static void xremote_control_submenu_callback(void* context, uint32_t index) {
         xremote_app_view_alloc(app, index, xremote_player_view_alloc);
     else if(index == XRemoteViewIRCustomPage)
         xremote_app_view_alloc2(app, index, xremote_custom_view_alloc, app->context);
+    else if(index == XRemoteViewIRCustomEditPage)
+        xremote_edit_view_alloc(app, index, app->context);
 
     if(app->view_ctx != NULL) {
-        xremote_app_view_set_previous_callback(app, xremote_control_view_exit_callback);
-        xremote_app_set_view_context(app, app->context, NULL);
+        if(index != XRemoteViewIRCustomEditPage) {
+            xremote_app_view_set_previous_callback(app, xremote_control_view_exit_callback);
+            xremote_app_set_view_context(app, app->context, NULL);
+        }
+
         xremote_app_switch_to_view(app, index);
     }
 }
