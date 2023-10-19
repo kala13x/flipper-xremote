@@ -26,9 +26,9 @@ static void xremote_general_view_draw_horizontal(Canvas* canvas, XRemoteViewMode
     xremote_canvas_draw_button_wide(
         canvas, model->down_pressed, 0, 43, "Setup", XRemoteIconArrowDown);
     xremote_canvas_draw_button_wide(
-        canvas, model->left_pressed, 64, 21, "Menu", XRemoteIconArrowLeft);
+        canvas, model->left_pressed, 64, 20, "Menu", XRemoteIconArrowLeft);
     xremote_canvas_draw_button_wide(
-        canvas, model->right_pressed, 64, 39, "List", XRemoteIconArrowRight);
+        canvas, model->right_pressed, 64, 38, "List", XRemoteIconArrowRight);
 }
 
 static void xremote_general_view_draw_callback(Canvas* canvas, void* context) {
@@ -42,7 +42,13 @@ static void xremote_general_view_draw_callback(Canvas* canvas, void* context) {
                                          xremote_general_view_draw_vertical :
                                          xremote_general_view_draw_horizontal;
 
-    xremote_canvas_draw_header(canvas, orientation, "General");
+    xremote_canvas_draw_header(canvas, orientation, NULL);
+
+    Align align = orientation == ViewOrientationHorizontal ? AlignRight : AlignLeft;
+    uint8_t x = orientation == ViewOrientationHorizontal ? 128 : 0;
+    uint8_t y = orientation == ViewOrientationHorizontal ? 10 : 12;
+    elements_multiline_text_aligned(canvas, x, y, align, AlignTop, "General");
+
     xremote_general_view_draw_body(canvas, model);
     xremote_canvas_draw_exit_footer(canvas, orientation, "Press to exit");
 }

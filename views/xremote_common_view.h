@@ -84,13 +84,14 @@ typedef enum {
 } XRemoteIcon;
 
 typedef struct {
+    void* context;
     bool ok_pressed;
     bool back_pressed;
     bool up_pressed;
     bool down_pressed;
     bool left_pressed;
     bool right_pressed;
-    void* context;
+    bool hold;
 } XRemoteViewModel;
 
 typedef enum {
@@ -114,13 +115,16 @@ typedef enum {
     XRemoteViewIRPlayback,
     XRemoteViewIRNavigation,
     XRemoteViewIRCustomPage,
+    XRemoteViewIRCustomEditPage,
     XRemoteViewIRAllButtons
 } XRemoteViewID;
 
 typedef struct XRemoteView XRemoteView;
 typedef void (*XRemoteClearCallback)(void* context);
 typedef void (*XRemoteViewDrawFunction)(Canvas*, XRemoteViewModel*);
+
 typedef XRemoteView* (*XRemoteViewAllocator)(void* app_ctx);
+typedef XRemoteView* (*XRemoteViewAllocator2)(void* app_ctx, void* model_ctx);
 
 const char* xremote_button_get_name(int index);
 
@@ -145,7 +149,7 @@ void xremote_canvas_draw_button_wide(
     bool pressed,
     uint8_t x,
     uint8_t y,
-    char* text,
+    const char* text,
     XRemoteIcon icon);
 void xremote_canvas_draw_button_size(
     Canvas* canvas,

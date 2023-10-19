@@ -147,6 +147,7 @@ void xremote_view_model_context_set(XRemoteView* rview, void* model_ctx) {
             model->right_pressed = false;
             model->back_pressed = false;
             model->ok_pressed = false;
+            model->hold = false;
         },
         true);
 }
@@ -277,7 +278,7 @@ void xremote_canvas_draw_button_wide(
     bool pressed,
     uint8_t x,
     uint8_t y,
-    char* text,
+    const char* text,
     XRemoteIcon icon) {
     elements_slightly_rounded_frame(canvas, x + 4, y, 56, 15);
 
