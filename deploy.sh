@@ -53,7 +53,7 @@ sudo ./fbt COMPACT=1 DEBUG=0 launch APPSRC=$FLIPPER_APPSRC && DEPLOY_DONE=1
 # Run qflipper command if asked
 for arg in "$@"; do
     if [[ $arg == "--run" || $arg == "-r" ]]; then
-        [ $DEPLOY_DONE -eq 1 ] && sudo qflipper
+        [ $DEPLOY_DONE -eq 1 ] && qflipper
     fi
 done
 

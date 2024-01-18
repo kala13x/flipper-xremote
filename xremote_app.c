@@ -44,6 +44,10 @@ const char* xremote_app_get_exit_str(XRemoteAppExit exit_behavior) {
     return exit_behavior == XRemoteAppExitPress ? "Press" : "Hold";
 }
 
+const char* xremote_app_get_alt_names_str(uint8_t alt_names_index) {
+    return alt_names_index ? "On" : "Off";
+}
+
 const char* xremote_app_get_orientation_str(ViewOrientation view_orientation) {
     return view_orientation == ViewOrientationHorizontal ? "Horizontal" : "Vertical";
 }
@@ -183,7 +187,7 @@ XRemoteAppButtons* xremote_app_buttons_alloc() {
 
 XRemoteAppButtons* xremote_app_buttons_load(XRemoteAppContext* app_ctx) {
     /* Show file selection dialog (returns selected file path with app_ctx->file_path) */
-    if(!xremote_app_browser_select_file(app_ctx, XREMOTE_APP_EXTENSION)) return NULL;
+    if(!xremote_app_context_select_file(app_ctx, XREMOTE_APP_EXTENSION)) return NULL;
     XRemoteAppButtons* buttons = xremote_app_buttons_alloc();
     buttons->app_ctx = app_ctx;
 
@@ -207,6 +211,7 @@ XRemoteAppSettings* xremote_app_settings_alloc() {
     settings->orientation = ViewOrientationHorizontal;
     settings->exit_behavior = XRemoteAppExitPress;
     settings->repeat_count = 2;
+    settings->alt_names = 0;
     return settings;
 }
 
@@ -237,6 +242,9 @@ bool xremote_app_settings_store(XRemoteAppSettings* settings) {
 
         value = settings->repeat_count;
         if(!flipper_format_write_uint32(ff, "repeat", &value, 1)) break;
+
+        value = settings->alt_names;
+        if(!flipper_format_write_uint32(ff, "altNames", &value, 1)) break;
 
         success = true;
     } while(false);
@@ -272,6 +280,9 @@ bool xremote_app_settings_load(XRemoteAppSettings* settings) {
 
         if(!flipper_format_read_uint32(ff, "repeat", &value, 1)) break;
         settings->repeat_count = value;
+
+        if(!flipper_format_read_uint32(ff, "altNames", &value, 1)) break;
+        settings->alt_names = value;
 
         success = true;
     } while(false);
@@ -326,30 +337,34 @@ void xremote_app_context_free(XRemoteAppContext* ctx) {
     free(ctx);
 }
 
-bool xremote_app_browser_select_file(XRemoteAppContext* app_ctx, const char* extension) {
+bool xremote_app_browser_select_file(FuriString** file_path, const char* extension) {
     DialogsApp* dialogs = furi_record_open(RECORD_DIALOGS);
     Storage* storage = furi_record_open(RECORD_STORAGE);
     storage_simply_mkdir(storage, XREMOTE_APP_FOLDER);
 
-    if(app_ctx->file_path == NULL) {
-        app_ctx->file_path = furi_string_alloc();
-        furi_string_set(app_ctx->file_path, XREMOTE_APP_FOLDER);
+    if(*file_path == NULL) {
+        *file_path = furi_string_alloc();
+        furi_string_set(*file_path, XREMOTE_APP_FOLDER);
     }
 
     /* Open file browser (view and dialogs are managed by the browser itself) */
     DialogsFileBrowserOptions browser;
     dialog_file_browser_set_basic_options(&browser, extension, &I_IR_Icon_10x10);
     browser.base_path = XREMOTE_APP_FOLDER;
-    FuriString* path = app_ctx->file_path;
 
     /* Show file selection dialog (returns selected file path with file_path) */
-    bool status = dialog_file_browser_show(dialogs, path, path, &browser);
+    bool status = dialog_file_browser_show(dialogs, *file_path, *file_path, &browser);
 
     /* Cleanup file loading context */
     furi_record_close(RECORD_STORAGE);
     furi_record_close(RECORD_DIALOGS);
 
     return status;
+}
+
+bool xremote_app_context_select_file(XRemoteAppContext* app_ctx, const char* extension) {
+    if(app_ctx == NULL) return false;
+    return xremote_app_browser_select_file(&app_ctx->file_path, extension);
 }
 
 const char* xremote_app_context_get_exit_str(XRemoteAppContext* app_ctx) {
