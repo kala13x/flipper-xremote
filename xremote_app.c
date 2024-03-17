@@ -13,7 +13,6 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #define XREMOTE_APP_SETTINGS APP_DATA_PATH("xremote.cfg")
-#define TAG "XRemoteApp"
 
 #define XREMOTE_ORIENTATION_TEXT_HORIZONTAL "Horizontal"
 #define XREMOTE_ORIENTATION_TEXT_VERTICAL "Vertical"
@@ -149,6 +148,49 @@ bool xremote_app_extension_store(XRemoteAppButtons* buttons, FuriString* path) {
     return success;
 }
 
+bool xremote_app_alt_names_check_and_store() {
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    FlipperFormat* ff = flipper_format_file_alloc(storage);
+    bool success = false;
+
+    do {
+        if(!flipper_format_file_open_new(ff, XREMOTE_ALT_NAMES)) break;
+        if(!flipper_format_write_header_cstr(ff, "XRemote Alt-Names", 1)) break;
+        if(!flipper_format_write_comment_cstr(ff, "")) break;
+
+        if(!flipper_format_write_string_cstr(ff, "Power", "shutdown,off,on,standby")) break;
+        if(!flipper_format_write_string_cstr(ff, "Setup", "settings,config,cfg")) break;
+        if(!flipper_format_write_string_cstr(ff, "Input", "source,select")) break;
+        if(!flipper_format_write_string_cstr(ff, "Menu", "osd,gui")) break;
+        if(!flipper_format_write_string_cstr(ff, "List", "guide")) break;
+        if(!flipper_format_write_string_cstr(ff, "Info", "display")) break;
+        if(!flipper_format_write_string_cstr(ff, "Mode", "aspect,format")) break;
+        if(!flipper_format_write_string_cstr(ff, "Back", "return,exit")) break;
+        if(!flipper_format_write_string_cstr(ff, "Ok", "enter,select")) break;
+        if(!flipper_format_write_string_cstr(ff, "Up", "uparrow")) break;
+        if(!flipper_format_write_string_cstr(ff, "Down", "downarrow")) break;
+        if(!flipper_format_write_string_cstr(ff, "Left", "leftarrow")) break;
+        if(!flipper_format_write_string_cstr(ff, "Right", "rightarrow")) break;
+        if(!flipper_format_write_string_cstr(ff, "Mute", "silence,silent,unmute")) break;
+        if(!flipper_format_write_string_cstr(ff, "Vol_up", "vol+,volume+,volup,+")) break;
+        if(!flipper_format_write_string_cstr(ff, "Vol_dn", "vol-,volume-,voldown,-")) break;
+        if(!flipper_format_write_string_cstr(ff, "Ch_next", "ch+,channel+,chup")) break;
+        if(!flipper_format_write_string_cstr(ff, "Ch_prev", "ch-,channel-,chdown")) break;
+        if(!flipper_format_write_string_cstr(ff, "Next", "next,skip,ffwd")) break;
+        if(!flipper_format_write_string_cstr(ff, "Prev", "prev,back,rewind,rew")) break;
+        if(!flipper_format_write_string_cstr(ff, "Fast_fo", "fastfwd,fastforward,ff")) break;
+        if(!flipper_format_write_string_cstr(ff, "Fast_ba", "fastback,fastrewind,fb")) break;
+        if(!flipper_format_write_string_cstr(ff, "Play_pa", "playpause,play,pause")) break;
+
+        success = true;
+    } while(false);
+
+    furi_record_close(RECORD_STORAGE);
+    flipper_format_free(ff);
+
+    return success;
+}
+
 void xremote_app_buttons_free(XRemoteAppButtons* buttons) {
     xremote_app_assert_void(buttons);
     infrared_remote_free(buttons->remote);
@@ -224,7 +266,7 @@ bool xremote_app_settings_store(XRemoteAppSettings* settings) {
     Storage* storage = furi_record_open(RECORD_STORAGE);
     FlipperFormat* ff = flipper_format_file_alloc(storage);
 
-    FURI_LOG_I(TAG, "store config file: \'%s\'", XREMOTE_APP_SETTINGS);
+    FURI_LOG_I(XREMOTE_APP_TAG, "store config file: \'%s\'", XREMOTE_APP_SETTINGS);
     bool success = false;
 
     do {
@@ -260,7 +302,7 @@ bool xremote_app_settings_load(XRemoteAppSettings* settings) {
     FlipperFormat* ff = flipper_format_buffered_file_alloc(storage);
     FuriString* header = furi_string_alloc();
 
-    FURI_LOG_I(TAG, "load config file: \'%s\'", XREMOTE_APP_SETTINGS);
+    FURI_LOG_I(XREMOTE_APP_TAG, "load config file: \'%s\'", XREMOTE_APP_SETTINGS);
     uint32_t version = 0;
     uint32_t value = 0;
     bool success = false;

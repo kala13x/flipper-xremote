@@ -32,9 +32,13 @@
 // XRemote generic functions and definitions
 //////////////////////////////////////////////////////////////////////////////
 
-#define XREMOTE_APP_EXTENSION ".ir"
-#define XREMOTE_APP_FOLDER ANY_PATH("infrared")
 #define XREMOTE_APP_TEXT_MAX 128
+#define XREMOTE_APP_EXTENSION ".ir"
+#define XREMOTE_APP_TAG "XRemoteApp"
+
+#define XREMOTE_APP_FOLDER ANY_PATH("infrared")
+#define XREMOTE_APP_SETTINGS APP_DATA_PATH("xremote.cfg")
+#define XREMOTE_ALT_NAMES APP_DATA_PATH("alt_names.cfg")
 
 #define xremote_app_assert_void(cond) \
     if(!cond) return
@@ -117,6 +121,7 @@ XRemoteAppButtons* xremote_app_buttons_load(XRemoteAppContext* app_ctx);
 
 bool xremote_app_extension_store(XRemoteAppButtons* buttons, FuriString* path);
 bool xremote_app_extension_load(XRemoteAppButtons* buttons, FuriString* path);
+bool xremote_app_alt_names_check_and_store();
 
 //////////////////////////////////////////////////////////////////////////////
 // XRemote application factory

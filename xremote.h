@@ -10,7 +10,7 @@
 
 #define XREMOTE_VERSION_MAJ 1
 #define XREMOTE_VERSION_MIN 2
-#define XREMOTE_BUILD_NUMBER 1
+#define XREMOTE_BUILD_NUMBER 2
 
 /* Returns FAP_VERSION + XREMOTE_BUILD_NUMBER */
 void xremote_get_version(char* version, size_t length);
