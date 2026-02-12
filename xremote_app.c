@@ -14,15 +14,15 @@
 
 #define XREMOTE_APP_SETTINGS APP_DATA_PATH("xremote.cfg")
 
-#define XREMOTE_ORIENTATION_TEXT_HORIZONTAL "Horizontal"
-#define XREMOTE_ORIENTATION_TEXT_VERTICAL "Vertical"
+#define XREMOTE_ORIENTATION_TEXT_HORIZONTAL  "Horizontal"
+#define XREMOTE_ORIENTATION_TEXT_VERTICAL    "Vertical"
 #define XREMOTE_ORIENTATION_INDEX_HORIZONTAL 0
-#define XREMOTE_ORIENTATION_INDEX_VERTICAL 1
+#define XREMOTE_ORIENTATION_INDEX_VERTICAL   1
 
-#define XREMOTE_EXIT_BEHAVIOR_TEXT_PRESS "Press"
-#define XREMOTE_EXIT_BEHAVIOR_TEXT_HOLD "Hold"
+#define XREMOTE_EXIT_BEHAVIOR_TEXT_PRESS  "Press"
+#define XREMOTE_EXIT_BEHAVIOR_TEXT_HOLD   "Hold"
 #define XREMOTE_EXIT_BEHAVIOR_INDEX_PRESS 0
-#define XREMOTE_EXIT_BEHAVIOR_INDEX_HOLD 1
+#define XREMOTE_EXIT_BEHAVIOR_INDEX_HOLD  1
 
 const NotificationSequence g_sequence_blink_purple_50 = {
     &message_red_255,
@@ -358,7 +358,6 @@ XRemoteAppContext* xremote_app_context_alloc(void* arg) {
 
     /* Allocate and setup view dispatcher */
     ctx->view_dispatcher = view_dispatcher_alloc();
-    view_dispatcher_enable_queue(ctx->view_dispatcher);
     view_dispatcher_attach_to_gui(ctx->view_dispatcher, ctx->gui, ViewDispatcherTypeFullscreen);
 
     return ctx;
