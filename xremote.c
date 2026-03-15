@@ -77,20 +77,7 @@ void xremote_submenu_callback(void* context, uint32_t index) {
     }
 }
 
-int32_t xremote_main(void* p) {
-    /* Allocate context and main application */
-    XRemoteAppContext* context = xremote_app_context_alloc(p);
-    XRemoteApp* app = xremote_app_alloc(context);
-
-    /* Allocate and build the menu */
-    xremote_app_submenu_alloc(app, XRemoteViewSubmenu, xremote_exit_callback);
-    xremote_app_submenu_add(app, "Learn", XRemoteViewLearn, xremote_submenu_callback);
-    xremote_app_submenu_add(app, "Saved", XRemoteViewIRSubmenu, xremote_submenu_callback);
-    xremote_app_submenu_add(app, "Analyzer", XRemoteViewAnalyzer, xremote_submenu_callback);
-    xremote_app_submenu_add(app, "Settings", XRemoteViewSettings, xremote_submenu_callback);
-    xremote_app_submenu_add(app, "About", XRemoteViewAbout, xremote_submenu_callback);
-
-    bool otg_was_enabled = furi_hal_power_is_otg_enabled();
+static bool xremote_infra_settings_load(bool is_otg_enabled) {
     InfraredSettings settings = {0};
     bool infrared_app_settings_loaded = saved_struct_load(
         INFRARED_SETTINGS_PATH,
@@ -98,10 +85,11 @@ int32_t xremote_main(void* p) {
         sizeof(InfraredSettings),
         INFRARED_SETTINGS_MAGIC,
         INFRARED_SETTINGS_VERSION);
+
     if(infrared_app_settings_loaded) {
         if(settings.tx_pin < FuriHalInfraredTxPinMax) {
             furi_hal_infrared_set_tx_output(settings.tx_pin);
-            if(settings.otg_enabled != otg_was_enabled) {
+            if(settings.otg_enabled != is_otg_enabled) {
                 if(settings.otg_enabled) {
                     furi_hal_power_enable_otg();
                 } else {
@@ -117,20 +105,44 @@ int32_t xremote_main(void* p) {
         }
     }
 
+    return infrared_app_settings_loaded;
+}
+
+static void xremote_infra_settings_restore(bool was_otg_enabled) {
+    furi_hal_infrared_set_tx_output(FuriHalInfraredTxPinInternal);
+    if(furi_hal_power_is_otg_enabled() != was_otg_enabled) {
+        if(was_otg_enabled) {
+            furi_hal_power_enable_otg();
+        } else {
+            furi_hal_power_disable_otg();
+        }
+    }
+}
+
+int32_t xremote_main(void* p) {
+    /* Allocate context and main application */
+    XRemoteAppContext* context = xremote_app_context_alloc(p);
+    XRemoteApp* app = xremote_app_alloc(context);
+
+    /* Allocate and build the menu */
+    xremote_app_submenu_alloc(app, XRemoteViewSubmenu, xremote_exit_callback);
+    xremote_app_submenu_add(app, "Learn", XRemoteViewLearn, xremote_submenu_callback);
+    xremote_app_submenu_add(app, "Saved", XRemoteViewIRSubmenu, xremote_submenu_callback);
+    xremote_app_submenu_add(app, "Analyzer", XRemoteViewAnalyzer, xremote_submenu_callback);
+    xremote_app_submenu_add(app, "Settings", XRemoteViewSettings, xremote_submenu_callback);
+    xremote_app_submenu_add(app, "About", XRemoteViewAbout, xremote_submenu_callback);
+
+    /* Load infrared settings and save OTG state */
+    bool is_otg_enabled = furi_hal_power_is_otg_enabled();
+    bool infra_settings_loaded = xremote_infra_settings_load(is_otg_enabled);
+
     /* Switch to main menu by default and run disparcher*/
     xremote_app_switch_to_view(app, XRemoteViewSubmenu);
     view_dispatcher_run(app->app_ctx->view_dispatcher);
 
-    if(infrared_app_settings_loaded) {
-        furi_hal_infrared_set_tx_output(FuriHalInfraredTxPinInternal);
-        if(furi_hal_power_is_otg_enabled() != otg_was_enabled) {
-            if(otg_was_enabled) {
-                furi_hal_power_enable_otg();
-            } else {
-                furi_hal_power_disable_otg();
-            }
-        }
-    }
+    /* Restore infrared settings and OTG state */
+    if(infra_settings_loaded)
+        xremote_infra_settings_restore(is_otg_enabled);
 
     /* Cleanup and exit */
     xremote_app_free(app);
