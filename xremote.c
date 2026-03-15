@@ -92,26 +92,28 @@ int32_t xremote_main(void* p) {
 
     bool otg_was_enabled = furi_hal_power_is_otg_enabled();
     InfraredSettings settings = {0};
-    saved_struct_load(
+    bool infrared_app_settings_loaded = saved_struct_load(
         INFRARED_SETTINGS_PATH,
         &settings,
         sizeof(InfraredSettings),
         INFRARED_SETTINGS_MAGIC,
         INFRARED_SETTINGS_VERSION);
-    if(settings.tx_pin < FuriHalInfraredTxPinMax) {
-        furi_hal_infrared_set_tx_output(settings.tx_pin);
-        if(settings.otg_enabled != otg_was_enabled) {
-            if(settings.otg_enabled) {
-                furi_hal_power_enable_otg();
-            } else {
-                furi_hal_power_disable_otg();
+    if(infrared_app_settings_loaded) {
+        if(settings.tx_pin < FuriHalInfraredTxPinMax) {
+            furi_hal_infrared_set_tx_output(settings.tx_pin);
+            if(settings.otg_enabled != otg_was_enabled) {
+                if(settings.otg_enabled) {
+                    furi_hal_power_enable_otg();
+                } else {
+                    furi_hal_power_disable_otg();
+                }
             }
-        }
-    } else {
-        FuriHalInfraredTxPin tx_pin_detected = furi_hal_infrared_detect_tx_output();
-        furi_hal_infrared_set_tx_output(tx_pin_detected);
-        if(tx_pin_detected != FuriHalInfraredTxPinInternal) {
-            furi_hal_power_enable_otg();
+        } else {
+            FuriHalInfraredTxPin tx_pin_detected = furi_hal_infrared_detect_tx_output();
+            furi_hal_infrared_set_tx_output(tx_pin_detected);
+            if(tx_pin_detected != FuriHalInfraredTxPinInternal) {
+                furi_hal_power_enable_otg();
+            }
         }
     }
 
@@ -119,12 +121,14 @@ int32_t xremote_main(void* p) {
     xremote_app_switch_to_view(app, XRemoteViewSubmenu);
     view_dispatcher_run(app->app_ctx->view_dispatcher);
 
-    furi_hal_infrared_set_tx_output(FuriHalInfraredTxPinInternal);
-    if(furi_hal_power_is_otg_enabled() != otg_was_enabled) {
-        if(otg_was_enabled) {
-            furi_hal_power_enable_otg();
-        } else {
-            furi_hal_power_disable_otg();
+    if(infrared_app_settings_loaded) {
+        furi_hal_infrared_set_tx_output(FuriHalInfraredTxPinInternal);
+        if(furi_hal_power_is_otg_enabled() != otg_was_enabled) {
+            if(otg_was_enabled) {
+                furi_hal_power_enable_otg();
+            } else {
+                furi_hal_power_disable_otg();
+            }
         }
     }
 
